@@ -21,13 +21,12 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-static uint8_t gps_rx_buffer[BESTPOS_BUFFER_SIZE];
+
 
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
-DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USART1 init function */
 
@@ -153,26 +152,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    /* USART1 DMA Init */
-    /* USART1_RX Init */
-    hdma_usart1_rx.Instance = DMA1_Channel1;
-    hdma_usart1_rx.Init.Request = DMA_REQUEST_USART1_RX;
-    hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_usart1_rx.Init.Mode = DMA_NORMAL;
-    hdma_usart1_rx.Init.Priority = DMA_PRIORITY_HIGH;
-    if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart1_rx);
-
     /* USART1 interrupt Init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -231,9 +212,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_4|GPIO_PIN_5);
 
-    /* USART1 DMA DeInit */
-    HAL_DMA_DeInit(uartHandle->hdmarx);
-
     /* USART1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspDeInit 1 */
@@ -261,66 +239,5 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
-void start_bestpos(void)
-{
-  static uint8_t bestpos_cmd[] = "LOG THISPORT BESTPOSB ONTIME 0.05\r\n";
-
-  HAL_UART_Transmit(&huart1, bestpos_cmd, sizeof(bestpos_cmd), 1000);
-
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, gps_rx_buffer, BESTPOS_BUFFER_SIZE);
-  __HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT);
-  return;
-}
-
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
-    if (huart->Instance == USART1) {
-
-    	static uint8_t sync_bytes[] = {0xaa, 0x44, 0x12};
-
-    	uint8_t temp_buff[Size];
-    	memcpy(temp_buff, gps_rx_buffer, Size);
-
-    	uint8_t CAN_data[64];
-    	uint8_t *CAN_data_ptr = CAN_data;
-
-    	for(uint8_t i = 0; i < 3; i++){
-    		if(temp_buff[i] != sync_bytes[i])
-    			return;
-    	}
-
-    	uint8_t *ptr = temp_buff + 3;
-
-    	uint8_t header_size = *ptr;
-    	//skip over rest of header
-    	ptr += header_size;
-
-    	// See https://docs.novatel.com/OEM7/Content/Logs/BESTPOS.htm?tocpath=Commands%20%2526%20Logs%7CLogs%7CGNSS%20Logs%7C_____20
-    	// This copies fields 2-11 inclusive.
-    	memcpy(CAN_data_ptr, ptr, 52);
-    	CAN_data_ptr += 52;
-    	// Skip to field 13
-    	ptr += 56;
-
-    	//Copy fields 13 and 14
-    	memcpy(CAN_data_ptr, ptr, 8);
-    	CAN_data_ptr += 8;
-    	// Skip to field 16
-    	ptr += 9;
-
-    	//Copy field 16
-    	memcpy(CAN_data_ptr, ptr, 1);
-    	CAN_data_ptr += 1;
-    	// Skip to field 20
-    	ptr += 4;
-
-    	//Copy fields 20-22
-    	memcpy(CAN_data_ptr, ptr, 3);
-
-    	sendCANMessage(CAN_data);
-
-    	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, gps_rx_buffer, BESTPOS_BUFFER_SIZE);
-    	  __HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT);
-    }
-}
 
 /* USER CODE END 1 */

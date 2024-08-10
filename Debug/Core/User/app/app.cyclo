@@ -1,0 +1,2 @@
+../Core/User/app/app.c:41:6:RTOS_Init	1
+../Core/User/app/app.c:47:6:StartGPS	10
