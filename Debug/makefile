@@ -67,8 +67,8 @@ all: main-build
 main-build: GPS_IMU.elf secondary-outputs
 
 # Tool invocations
-GPS_IMU.elf GPS_IMU.map: $(OBJS) $(USER_OBJS) C:\Users\Steven\Documents\GitRepo\UCR1-GPS\STM32G474RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "GPS_IMU.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Steven\Documents\GitRepo\UCR1-GPS\STM32G474RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GPS_IMU.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+GPS_IMU.elf GPS_IMU.map: $(OBJS) $(USER_OBJS) C:\Users\steve\Documents\UCR1-GPS\STM32G474RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "GPS_IMU.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\steve\Documents\UCR1-GPS\STM32G474RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GPS_IMU.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

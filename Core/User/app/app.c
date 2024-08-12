@@ -59,6 +59,7 @@ void StartGPS(void *argument){
     TxHeader.FDFormat = FDCAN_FD_CAN;
     TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     TxHeader.MessageMarker = 0;
+    osDelay(10000);
     while(1){
         osSemaphoreAcquire(gpsSemaphoreHandle, osWaitForever);
         char tempMsg[UARTBUFFERLENGTH];
@@ -109,6 +110,7 @@ void StartGPS(void *argument){
             }
             ucr_01_gps_best_pos_pack(canTxData, &gpsData, UCR_01_GPS_BEST_POS_LENGTH);
             if(HAL_OK != HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, canTxData)){
+
             }
         }
     }
