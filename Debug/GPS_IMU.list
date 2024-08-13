@@ -1300,9 +1300,9 @@ void MX_FDCAN1_Init(void)
  8000f50:	4b1d      	ldr	r3, [pc, #116]	@ (8000fc8 <MX_FDCAN1_Init+0x88>)
  8000f52:	f44f 7240 	mov.w	r2, #768	@ 0x300
  8000f56:	609a      	str	r2, [r3, #8]
-  hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
+  hfdcan1.Init.Mode = FDCAN_MODE_EXTERNAL_LOOPBACK;
  8000f58:	4b1b      	ldr	r3, [pc, #108]	@ (8000fc8 <MX_FDCAN1_Init+0x88>)
- 8000f5a:	2200      	movs	r2, #0
+ 8000f5a:	2204      	movs	r2, #4
  8000f5c:	60da      	str	r2, [r3, #12]
   hfdcan1.Init.AutoRetransmission = DISABLE;
  8000f5e:	4b1a      	ldr	r3, [pc, #104]	@ (8000fc8 <MX_FDCAN1_Init+0x88>)
