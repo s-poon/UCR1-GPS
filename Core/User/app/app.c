@@ -11,6 +11,8 @@
 #include "fdcan.h"
 #include "../../vendor_generated/can_tools/ucr_01.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 osThreadId_t gpsTaskHandle;
 const osThreadAttr_t gpsTask_attributes = {
@@ -24,19 +26,11 @@ const osSemaphoreAttr_t gpsSemaphore_attributes = {
   .name = "gpsSemaphore"
 };
 
-//uint8_t gpsData[UARTBUFFERLENGTH];
 uint8_t canTxData[UCR_01_GPS_BEST_POS_LENGTH];
 extern uint8_t temp[];
-extern uint8_t FinalData[];
-//double latitude = 0;
-//double longitude = 0;
-//double altitude = 0;
-//double stdLatitude = 0;
-//double stdLongitude = 0;
-//double stdAltitude = 0;
+extern char FinalData[];
 
 struct ucr_01_gps_best_pos_t gpsData;
-
 
 void RTOS_Init(void){
     gpsTaskHandle = osThreadNew(StartGPS, NULL, &gpsTask_attributes);
@@ -45,21 +39,24 @@ void RTOS_Init(void){
 }
 
 void StartGPS(void *argument){
+    char statusMessage[] = "PPP";
+//    uint8_t gpsStatus = 1;
     HAL_FDCAN_Start(&hfdcan1);
     unsigned char start[] = "log bestposa ontime 0.1\r\n";
+//    osDelay(10000);
     HAL_UART_Transmit (&huart1, start, sizeof(start), 10);
     HAL_UART_Receive_IT(&huart1, temp, 1);
     FDCAN_TxHeaderTypeDef TxHeader;
     TxHeader.Identifier = UCR_01_GPS_BEST_POS_FRAME_ID;
     TxHeader.IdType = FDCAN_STANDARD_ID;
     TxHeader.TxFrameType = FDCAN_DATA_FRAME;
-    TxHeader.DataLength = FDCAN_DLC_BYTES_48;
+    TxHeader.DataLength = FDCAN_DLC_BYTES_64;
     TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
     TxHeader.BitRateSwitch = FDCAN_BRS_ON;
     TxHeader.FDFormat = FDCAN_FD_CAN;
     TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     TxHeader.MessageMarker = 0;
-    osDelay(10000);
+
     while(1){
         osSemaphoreAcquire(gpsSemaphoreHandle, osWaitForever);
         char tempMsg[UARTBUFFERLENGTH];
@@ -78,10 +75,10 @@ void StartGPS(void *argument){
                         //separate by ; and get sol stat
                         break;
                     case 9:
-                        // pos type
+                        gpsData.gps_status = strcmp(token, statusMessage);
                         break;
                     case 10:
-                        gpsData.latitude++;
+                        gpsData.latitude = atof(token);
                         break;
                     case 11:
                         gpsData.longitude = atof(token);

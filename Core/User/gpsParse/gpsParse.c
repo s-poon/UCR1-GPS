@@ -13,7 +13,7 @@
 uint8_t pos = 0;
 uint8_t temp[2];
 uint8_t RxData[UARTBUFFERLENGTH];
-uint8_t FinalData[UARTBUFFERLENGTH];
+char FinalData[UARTBUFFERLENGTH];
 extern uint8_t gpsData[UARTBUFFERLENGTH];
 extern osSemaphoreId_t gpsSemaphoreHandle;
 
