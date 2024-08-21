@@ -36,13 +36,17 @@ extern osSemaphoreId_t gpsSemaphoreHandle;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     if(temp[0] == '\n'){
-        memcpy(FinalData, RxData, pos);
+        memcpy(&FinalData, RxData, pos);
         pos = 0;
         osSemaphoreRelease(gpsSemaphoreHandle);
     }else{
         memcpy(RxData + pos, temp, 1);
         pos++;
     }
-    HAL_UART_Receive_IT(&huart1, temp, 1);
+    if(pos >= UARTBUFFERLENGTH){
+        pos = 0;
+    }
+    HAL_UART_Receive_IT(huart, temp, 1);
 }
+
 

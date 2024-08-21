@@ -27,35 +27,31 @@ const osSemaphoreAttr_t gpsSemaphore_attributes = {
 };
 
 uint8_t canTxData[UCR_01_GPS_BEST_POS_LENGTH];
-extern uint8_t temp[];
-extern char FinalData[];
-
 struct ucr_01_gps_best_pos_t gpsData;
+extern uint8_t temp[2];
+extern char FinalData[];
 
 void RTOS_Init(void){
     gpsTaskHandle = osThreadNew(StartGPS, NULL, &gpsTask_attributes);
-
     gpsSemaphoreHandle = osSemaphoreNew(1, 0, &gpsSemaphore_attributes);
 }
 
 void StartGPS(void *argument){
     char statusMessage[] = "PPP";
-//    uint8_t gpsStatus = 1;
     HAL_FDCAN_Start(&hfdcan1);
-    unsigned char start[] = "log bestposa ontime 0.1\r\n";
-//    osDelay(10000);
-    HAL_UART_Transmit (&huart1, start, sizeof(start), 10);
     HAL_UART_Receive_IT(&huart1, temp, 1);
     FDCAN_TxHeaderTypeDef TxHeader;
     TxHeader.Identifier = UCR_01_GPS_BEST_POS_FRAME_ID;
     TxHeader.IdType = FDCAN_STANDARD_ID;
     TxHeader.TxFrameType = FDCAN_DATA_FRAME;
     TxHeader.DataLength = FDCAN_DLC_BYTES_64;
-    TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+    TxHeader.ErrorStateIndicator = FDCAN_ESI_PASSIVE;
     TxHeader.BitRateSwitch = FDCAN_BRS_ON;
     TxHeader.FDFormat = FDCAN_FD_CAN;
     TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     TxHeader.MessageMarker = 0;
+    uint8_t canTestData[UCR_01_GPS_BEST_POS_LENGTH];
+    HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, canTestData);
 
     while(1){
         osSemaphoreAcquire(gpsSemaphoreHandle, osWaitForever);
@@ -79,6 +75,7 @@ void StartGPS(void *argument){
                         break;
                     case 10:
                         gpsData.latitude = atof(token);
+//                        gpsData.latitude = atof(token);
                         break;
                     case 11:
                         gpsData.longitude = atof(token);
@@ -107,7 +104,6 @@ void StartGPS(void *argument){
             }
             ucr_01_gps_best_pos_pack(canTxData, &gpsData, UCR_01_GPS_BEST_POS_LENGTH);
             if(HAL_OK != HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, canTxData)){
-
             }
         }
     }

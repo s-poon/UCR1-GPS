@@ -1,2 +1,2 @@
-../Core/User/app/app.c:35:6:RTOS_Init	8	static
-../Core/User/app/app.c:41:6:StartGPS	360	static
+../Core/User/app/app.c:34:6:RTOS_Init	8	static
+../Core/User/app/app.c:39:6:StartGPS	384	static
