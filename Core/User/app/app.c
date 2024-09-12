@@ -108,3 +108,7 @@ void StartGPS(void *argument){
         }
     }
 }
+
+void ParseMessage(void){
+    
+}

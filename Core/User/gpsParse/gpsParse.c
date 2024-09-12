@@ -9,13 +9,27 @@
 #include "usart.h"
 #include "app.h"
 #include "cmsis_os.h"
+#include <stdbool.h>
 
 uint8_t pos = 0;
 uint8_t temp[2];
 uint8_t RxData[UARTBUFFERLENGTH];
+uint8_t messageLength;
+uint8_t headerLength;
+uint16_t imuRatePVAMessageID = 1778;
+uint16_t recievedMessageID;
+double latitude = 0;
+double longitude = 0;
+double height = 0;
+
 char FinalData[UARTBUFFERLENGTH];
 extern uint8_t gpsData[UARTBUFFERLENGTH];
 extern osSemaphoreId_t gpsSemaphoreHandle;
+typedef enum RecieveState{
+    Header,
+    Message
+}RecieveState_t;
+RecieveState_t CurrentState = Header; 
 
 //void start_bestpos(void)
 //{
@@ -49,4 +63,42 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     HAL_UART_Receive_IT(huart, temp, 1);
 }
 
+void HAL_UART_RxCpltCallback1(UART_HandleTypeDef *huart){
+    switch(CurrentState){
+        case Header:
+            DecodeHeader();
+            break;
+        case Message:
 
+            break;
+    }
+    osSemaphoreRelease(gpsSemaphoreHandle);
+    HAL_UART_Receive_IT(huart, temp, 1);
+}
+
+void IMURATEPVA(void){
+    for(int i = 0; i < sizeof(double); i++){
+        ((uint8_t*) & latitude)[i] = temp[0];
+    }
+}
+
+void DecodeHeader(void){
+    if(pos == 3){
+        // set header length
+        headerLength = temp[0];
+    }else if(pos == 4){
+        // Set Header Length
+        recievedMessageID = temp[0];
+    }else if(pos == 5){
+        recievedMessageID += temp[0] << 8;
+    }else if(pos == 8){
+        messageLength = temp[0];
+    }else if(pos == 9){
+        messageLength += temp[0] << 8; 
+    }else if(pos == headerLength){
+        CurrentState = Message;
+        pos = 0;
+        return;
+    }
+    pos ++;
+}

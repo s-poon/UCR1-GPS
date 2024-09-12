@@ -8,6 +8,6 @@
 #ifndef USER_GPSPARSE_GPSPARSE_H_
 #define USER_GPSPARSE_GPSPARSE_H_
 
-
+void DecodeHeader(void);
 
 #endif /* USER_GPSPARSE_GPSPARSE_H_ */

@@ -1,2 +1,3 @@
 ../Core/User/app/app.c:34:6:RTOS_Init	1
 ../Core/User/app/app.c:39:6:StartGPS	11
+../Core/User/app/app.c:112:6:ParseMessage	1
